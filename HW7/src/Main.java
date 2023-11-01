@@ -1,3 +1,8 @@
+/*
+*   데이터베이스시스템 HW7 : JDBC 이용
+*   작성자 : 2019038074 이우창
+*/
+
 import java.sql.*;
 import java.util.Scanner;
 
@@ -5,6 +10,7 @@ public class Main {
 
     private static Connection con;
 
+    // 프로그램 메뉴를 출력하는 함수
     private static char printMenu() {
         System.out.println("------------------------------------------------------");
         System.out.println("            Book Table Manipulation Test              ");
@@ -19,6 +25,7 @@ public class Main {
         return sc.next().charAt(0);
     }
 
+    // 레코드를 삽입
     private static void insertRecord(Integer id, String name, String pub, Integer price) {
         try {
             PreparedStatement stmt = con.prepareStatement(
@@ -36,6 +43,7 @@ public class Main {
         }
     }
 
+    // 레코드 삭제
     private static void deleteRecord(Integer id) {
         try {
             PreparedStatement stmt = con.prepareStatement(
@@ -50,6 +58,27 @@ public class Main {
         }
     }
 
+    // 레코드 검색 (by 애트리뷰트에 대해 %query%와 일치하는 레코드 찾기)
+    private static void searchBook(String by, String query) {
+        try {
+            PreparedStatement stmt = con.prepareStatement(
+                    "SELECT * FROM Book WHERE " + by + " LIKE '%" + query + "%'"
+            );
+            ResultSet rs = stmt.executeQuery();
+
+            System.out.println("\n[\"" + query + "\" 검색 결과]");
+            System.out.println("bookid      bookname        publisher       price");
+            while (rs.next()) {
+                System.out.println(rs.getInt(1) + "\t\t\t" + rs.getString(2)
+                        + "\t\t" + rs.getString(3) + "\t\t" + rs.getInt(4));
+            }
+            System.out.println();
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+    }
+
+    // 전체 레코드 출력
     private static void printAllRecord() {
         try {
             Statement stmt = con.createStatement();
@@ -65,12 +94,14 @@ public class Main {
         }
     }
 
+    // '>' 출력 후 사용자 입력 받기
     private static String getInput(String target) {
         System.out.print(((target.isEmpty()) ? "" : " " + target) + " > ");
         Scanner sc = new Scanner(System.in);
         return sc.nextLine();
     }
 
+    
     public static void main(String[] args) {
 
         /* Connection 생성 */
@@ -88,9 +119,10 @@ public class Main {
         LOOP: while (true) {
             char cmd = printMenu();
 
+            // 입력에 따라 기능 수행
             switch (cmd) {
                 case 'I':
-                case 'i':
+                case 'i': // 레코드 삽입
                     insertRecord(
                             Integer.parseInt(getInput("Book ID")),
                             getInput("제목"),
@@ -100,17 +132,27 @@ public class Main {
                     break;
 
                 case 'D':
-                case 'd':
+                case 'd': // 레코드 삭제
                     deleteRecord(Integer.parseInt(getInput("삭제할 Book ID")));
                     break;
 
+                case 'S':
+                case 's': // 레코드 검색
+                    if (getInput("제목으로 검색(Y/N)").equals("Y")) {
+                        searchBook("bookname", getInput("검색할 제목"));
+                    }
+                    else {
+                        searchBook("publisher", getInput("검색할 출판사"));
+                    }
+                    break;
+
                 case 'P':
-                case 'p':
+                case 'p': // 전체 레코드 출력
                     printAllRecord();
                     break;
 
                 case 'Z':
-                case 'z':
+                case 'z': // 종료
                     break LOOP;
             }
         }
